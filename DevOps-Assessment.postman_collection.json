@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "b03a1429-8dea-45bd-8c6a-90178a614f63",
+		"_postman_id": "27790025-684ba5e2-e3d8-4848-831d-830bea089f7c",
 		"name": "DevOps-Assessment",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
@@ -11,10 +11,10 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://localhost:8080/api/employees",
+					"raw": "http://127.0.0.1:8080/api/employees",
 					"protocol": "http",
 					"host": [
-						"localhost"
+						"127.0.0.1"
 					],
 					"port": "8080",
 					"path": [
@@ -38,13 +38,13 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"firstName\": \"John\",\n    \"lastName\": \"Doe\",\n    \"designation\": \"SDE\",\n    \"age\": 26\n}"
+					"raw": "{\n    \"firstName\": \"MANOJKUMAR\",\n    \"lastName\": \"MOVVA\",\n    \"designation\": \"SDE\",\n    \"age\": 26\n}"
 				},
 				"url": {
-					"raw": "http://localhost:8080/api/employees",
+					"raw": "http://127.0.0.1:8080/api/employees",
 					"protocol": "http",
 					"host": [
-						"localhost"
+						"127.0.0.1"
 					],
 					"port": "8080",
 					"path": [
