@@ -11,8 +11,7 @@ pipeline {
                 deleteDir()
             }
         }
-        
-        stage('Checkout') {
+            stage('Checkout') {
             steps {
                 git branch: 'main', url: 'https://github.com/movvamanoj/devops-assessment-1.git'
             }
@@ -25,7 +24,7 @@ pipeline {
                 }
             }
         }
-        
+
         stage('Code Quality Check') {
             steps {
             dir('/var/lib/jenkins/workspace/docker-assessment-v1/my-app'){
@@ -64,25 +63,83 @@ pipeline {
                 }
             }
         }
-    }
-    
-    post {
-        always {
+    }        
+post {
+    always {
+        script {
             emailext (
-                subject: "Build Notification: ${currentBuild.result}",
+                subject: "Build Notification: ${currentBuild.currentResult}",
                 body: """\
-                    <p>The build has completed with status: ${currentBuild.result}</p>
-                    <p>Build details:</p>
-                    <ul>
-                        <li>Build Number: ${env.BUILD_NUMBER}</li>
-                        <li>Build URL: ${env.BUILD_URL}</li>
-                        <li>Commit: ${env.GIT_COMMIT}</li>
-                        <li>Commit Message: ${env.GIT_COMMIT_MESSAGE}</li>
-                    </ul>
+                    <html>
+                    <head>
+                        <style>
+                            /* CSS Styles */
+                            body {
+                                font-family: Arial, sans-serif;
+                                background-color: #F5F5F5;
+                                padding: 20px;
+                            }
+                            .container {
+                                max-width: 600px;
+                                margin: 0 auto;
+                                background-color: #FFFFFF;
+                                border-radius: 5px;
+                                box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+                            }
+                            .header {
+                                background-color: #337AB7;
+                                color: #FFFFFF;
+                                padding: 20px;
+                                border-top-left-radius: 5px;
+                                border-top-right-radius: 5px;
+                            }
+                            .title {
+                                font-size: 24px;
+                                margin: 0;
+                            }
+                            .content {
+                                padding: 20px;
+                            }
+                            .job-details {
+                                margin-bottom: 20px;
+                            }
+                            .job-details p {
+                                margin: 0;
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="container">
+                            <div class="header">
+                                <h1 class="title">Build Notification</h1>
+                            </div>
+                            <div class="content">
+                                <div class="job-details">
+                                    <p>Build Status: ${currentBuild.currentResult}</p>
+                                    <p>Build Number: ${env.BUILD_NUMBER}</p>
+                                    <p>Build URL: <a href="${env.BUILD_URL}">${env.BUILD_URL}</a></p>
+                                    <p>Project Name: ${env.JOB_NAME}</p>
+                                    <p>Workspace: ${env.WORKSPACE}</p>
+                                    <p>Build User: ${env.USER}</p>
+                                    <p>Build Time: ${currentBuild.getTimeInMillis()} milliseconds</p>
+                                    <p>Build Duration: ${currentBuild.durationString}</p>
+                                    <p>Build Executor Number: ${env.BUILD_TAG}</p>
+                                    <p>Git Commit: ${env.GIT_COMMIT}</p>
+                                    <p>Git Branch: ${env.GIT_BRANCH}</p>
+                                    <p>Git Author: ${env.GIT_AUTHOR_NAME}</p>
+                                    <p>Git Commit Message: ${env.GIT_COMMIT_MESSAGE}</p>
+                                    <!-- Add more job-related data here -->
+                                </div>
+                            </div>
+                        </div>
+                    </body>
+                    </html>
                 """,
-                to: "manoj@movva.club"
-                
-            )
+                to: "manoj@movva.club,info@movva.club",
+                mimeType: 'text/html'
+                    )
+                }
+            }
         }
+        
     }
-}
