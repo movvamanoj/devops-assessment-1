@@ -31,7 +31,7 @@ sudo chkconfig docker on
 sudo usermod -aG docker $(whoami)
 
 # Pull and run the Docker image from Docker Hub
-sudo docker run -d -p 8080:8080 movvamanojaws/my-app
+sudo docker run -d -p 8888:8080 movvamanojaws/my-app
 
 # Verify Docker installation
 docker --version
