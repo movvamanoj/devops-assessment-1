@@ -1,0 +1,88 @@
+pipeline {
+    agent any
+    
+    tools {
+        nodejs 'NodeJS'
+    }
+
+    stages {
+        stage('Cleanup Workspace') {
+            steps {
+                deleteDir()
+            }
+        }
+        
+        stage('Checkout') {
+            steps {
+                git branch: 'main', url: 'https://github.com/movvamanoj/devops-assessment-1.git'
+            }
+        }
+        
+        stage('Build') {
+            steps {
+                dir('my-app') {
+                    sh 'mvn clean install'
+                }
+            }
+        }
+        
+        stage('Code Quality Check') {
+            steps {
+            dir('/var/lib/jenkins/workspace/docker-assessment-v1/my-app'){
+                withSonarQubeEnv('sonar_cred') {
+                    sh 'mvn sonar:sonar'
+                    }
+                }
+            }
+        }
+        
+        stage('Test API with Postman') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'postman_cred', passwordVariable: 'password', usernameVariable: 'username')]) {
+                    sh '''
+                        npm install -g newman
+                        newman run DevOps-Assessment.postman_collection.json --env-var username=**** --env-var password=**** --reporters cli,junit --reporter-junit-export test-results.xml
+                    '''
+                }
+            }
+        }
+        
+        stage('Docker Image') {
+            steps {
+                sh "docker build -t movvamanojaws/my-app ."
+            }
+        }
+        
+        stage('Push Docker Image') {
+            steps {
+		withCredentials([usernamePassword(credentialsId: 'docker_cred', passwordVariable: 'password', usernameVariable: 'username')]) {
+
+                sh """
+                    docker login -u ${username} -p ${password}
+                    docker push movvamanojaws/my-app
+                """
+                }
+            }
+        }
+    }
+    
+    post {
+        always {
+            emailext (
+                subject: "Build Notification: ${currentBuild.result}",
+                body: """\
+                    <p>The build has completed with status: ${currentBuild.result}</p>
+                    <p>Build details:</p>
+                    <ul>
+                        <li>Build Number: ${env.BUILD_NUMBER}</li>
+                        <li>Build URL: ${env.BUILD_URL}</li>
+                        <li>Commit: ${env.GIT_COMMIT}</li>
+                        <li>Commit Message: ${env.GIT_COMMIT_MESSAGE}</li>
+                    </ul>
+                """,
+                to: "manoj@movva.club"
+                
+            )
+        }
+    }
+}
