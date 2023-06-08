@@ -1,26 +1,36 @@
 #!/bin/bash
+
 # Function to install Red Hat packages
 install_redhat_packages() {
   # Install Red Hat specific packages
   sudo yum update -y
   sudo yum install -y wget unzip
+  
+  # Install Java 11
   sudo yum install -y java-11-openjdk-devel
+  echo "export JAVA_HOME=/usr/lib/jvm/java-11-openjdk" >> ~/.bashrc
+  source ~/.bashrc
+
+  # Install Java 17
   sudo yum install -y java-17-openjdk-devel
+  echo "export SONAR_JAVA_PATH=/usr/lib/jvm/java-17-openjdk-17.0.7.0.7-3.el9.x86_64" >> ~/.bashrc
+  source ~/.bashrc
+
+  # Install Java 8
   sudo yum install -y java-1.8.0-openjdk-devel
+  echo "export JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk" >> ~/.bashrc
+  source ~/.bashrc
+
   sudo yum install -y git
   sudo yum install -y maven
-
-
-sudo yum install -y yum-utils
+  sudo yum install -y yum-utils
   sudo yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
   sudo yum install -y docker-ce docker-ce-cli containerd.io
   sudo systemctl start docker
   sudo systemctl enable docker
   sudo usermod -aG docker jenkins
   sudo usermod -aG docker sonarqube
-
-
-sudo wget -O /etc/yum.repos.d/jenkins.repo https://pkg.jenkins.io/redhat-stable/jenkins.repo
+  sudo wget -O /etc/yum.repos.d/jenkins.repo https://pkg.jenkins.io/redhat-stable/jenkins.repo
   sudo rpm --import https://pkg.jenkins.io/redhat-stable/jenkins.io.key
   sudo yum install -y jenkins
   sudo systemctl start jenkins
@@ -32,22 +42,22 @@ sudo wget -O /etc/yum.repos.d/jenkins.repo https://pkg.jenkins.io/redhat-stable/
   sudo firewall-cmd --permanent --zone=public --add-port=8888/tcp
   sudo firewall-cmd --reload
 
-sudo wget https://dl.pstmn.io/download/latest/linux64 -O postman.tar.gz
-  sudo tar -xzf postman.tar.gz -C /opt
-  sudo ln -s /opt/Postman/Postman /usr/bin/postman
+  wget https://dl.pstmn.io/download/latest/linux64 -O postman.tar.gz
+  tar -xzf postman.tar.gz -C /opt
+  ln -s /opt/Postman/Postman /usr/bin/postman
   rm postman.tar.gz
 
-sudo wget https://binaries.sonarsource.com/Distribution/sonarqube/sonarqube-10.0.0.68432.zip
-  sudo unzip sonarqube-10.0.0.68432.zip -d /opt
-  sudo ln -s /opt/sonarqube-10.0.0.68432 /opt/sonarqube
-  sudo chown -R $USER:$USER /opt/sonarqube
+  wget https://binaries.sonarsource.com/Distribution/sonarqube/sonarqube-10.0.0.68432.zip
+  unzip sonarqube-10.0.0.68432.zip -d /opt
+  ln -s /opt/sonarqube-10.0.0.68432 /opt/sonarqube
+  chown -R $USER:$USER /opt/sonarqube
   rm sonarqube-10.0.0.68432.zip
-  sudo firewall-cmd --permanent --zone=public --add-port=9000/tcp
-  sudo firewall-cmd --reload
-    sudo /opt/sonarqube/bin/linux-x86-64/sonar.sh start
-  sudo usermod -aG sonarqube docker
-  sudo systemctl enable sonarqube
-  }
+  firewall-cmd --permanent --zone=public --add-port=9000/tcp
+  firewall-cmd --reload
+  /opt/sonarqube/bin/linux-x86-64/sonar.sh start
+  usermod -aG sonarqube docker
+}
+
 
 # Function to install Ubuntu packages
 install_ubuntu_packages() {
@@ -103,55 +113,75 @@ install_ubuntu_packages() {
 install_amazon_packages() {
   # Install Amazon Linux specific packages
   
-  sudo yum update -y
-  sudo yum install -y wget unzip
-  sudo amazon-linux-extras install -y java-openjdk11
-  sudo amazon-linux-extras install -y java-openjdk17
-  sudo amazon-linux-extras install -y java-openjdk8
-  # Function to setup Java environment variables
-  setup_java_environment() {
-  echo "export JAVA_HOME=/usr/lib/jvm/java-11-openjdk" >> ~/.bashrc
-  echo "export PATH=\$PATH:\$JAVA_HOME/bin" >> ~/.bashrc
-  echo "export SONAR_JAVA_PATH=/usr/lib/jvm/java-17-openjdk-17.0.7.0.7-3.el9.x86_64/bin/java" >> ~/.bashrc
-  source ~/.bashrc
-}
-  sudo yum install -y git
-  sudo yum install -y maven
-  # Install Docker
-  sudo amazon-linux-extras install -y docker
-  sudo systemctl start docker
-  sudo systemctl enable docker
-  sudo usermod -aG docker jenkins
-  sudo usermod -aG docker sonarqube
-  # Install Jenkins
-  sudo wget -O /etc/yum.repos.d/jenkins.repo https://pkg.jenkins.io/redhat-stable/jenkins.repo
-  sudo rpm --import https://pkg.jenkins.io/redhat-stable/jenkins.io.key
-  sudo yum install -y jenkins
-  sudo systemctl start jenkins
-  sudo systemctl enable jenkins
-  sudo usermod -aG docker jenkins
-  sudo chown -R jenkins:jenkins /var/lib/jenkins
-  sudo chmod -R 755 /var/lib/jenkins/
-  sudo firewall-cmd --permanent --zone=public --add-port=8080/tcp
-  sudo firewall-cmd --permanent --zone=public --add-port=8888/tcp
-  sudo firewall-cmd --reload
-  # Install Postman
-  sudo wget https://dl.pstmn.io/download/latest/linux64 -O postman.tar.gz
-  sudo tar -xzf postman.tar.gz -C /opt
-  sudo ln -s /opt/Postman/Postman /usr/bin/postman
-  rm postman.tar.gz
-  # Install SonarQube
-  sudo wget https://binaries.sonarsource.com/Distribution/sonarqube/sonarqube-10.0.0.68432.zip
-  sudo unzip sonarqube-10.0.0.68432.zip -d /opt
-  sudo ln -s /opt/sonarqube-10.0.0.68432 /opt/sonarqube
-  sudo chown -R $USER:$USER /opt/sonarqube
-  rm sonarqube-10.0.0.68432.zip
-  sudo firewall-cmd --permanent --zone=public --add-port=9000/tcp
-  sudo firewall-cmd --reload
-  sudo /opt/sonarqube/bin/linux-x86-64/sonar.sh start
-  sudo usermod -aG sonarqube docker
-  sudo systemctl enable sonarqube
-}
+sudo yum update -y
+sudo yum install -y wget unzip
+# Install Java 11
+sudo amazon-linux-extras install -y java-openjdk11
+echo "export JAVA_HOME=/usr/lib/jvm/java-11-openjdk" >> ~/.bashrc
+source ~/.bashrc
+
+# Install Java 17
+sudo amazon-linux-extras install -y java-openjdk17
+echo "export SONAR_JAVA_PATH=/usr/lib/jvm/java-17-openjdk-17.0.7.0.7-3.el9.x86_64" >> ~/.bashrc
+source ~/.bashrc
+
+# Install Java 8
+sudo amazon-linux-extras install -y java-openjdk8
+echo "export JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk" >> ~/.bashrc
+source ~/.bashrc
+
+sudo yum install -y git
+sudo yum install -y maven
+
+# Install Docker
+sudo amazon-linux-extras install -y docker
+sudo systemctl start docker
+sudo systemctl enable docker
+sudo usermod -aG docker jenkins
+sudo usermod -aG docker sonarqube
+
+# Install Jenkins
+sudo wget -O /etc/yum.repos.d/jenkins.repo https://pkg.jenkins.io/redhat-stable/jenkins.repo
+sudo rpm --import https://pkg.jenkins.io/redhat-stable/jenkins.io.key
+sudo yum install -y jenkins
+sudo systemctl start jenkins
+sudo systemctl enable jenkins
+sudo usermod -aG docker jenkins
+sudo chown -R jenkins:jenkins /var/lib/jenkins
+sudo chmod -R 755 /var/lib/jenkins/
+
+# Configure firewall for Jenkins
+sudo iptables -A INPUT -p tcp --dport 8080 -j ACCEPT
+sudo service iptables save
+sudo service iptables restart
+
+# Install Postman
+sudo wget https://dl.pstmn.io/download/latest/linux64 -O postman.tar.gz
+sudo tar -xzf postman.tar.gz -C /opt
+sudo ln -s /opt/Postman/Postman /usr/bin/postman
+rm postman.tar.gz
+
+# Install SonarQube
+sudo wget https://binaries.sonarsource.com/Distribution/sonarqube/sonarqube-10.0.0.68432.zip
+sudo unzip sonarqube-10.0.0.68432.zip -d /opt
+sudo ln -s /opt/sonarqube-10.0.0.68432 /opt/sonarqube
+sudo chown -R $USER:$USER /opt/sonarqube
+rm sonarqube-10.0.0.68432.zip
+
+# Configure firewall for SonarQube
+sudo iptables -A INPUT -p tcp --dport 9000 -j ACCEPT
+sudo service iptables save
+sudo service iptables restart
+
+# Start SonarQube
+sudo /opt/sonarqube/bin/linux-x86-64/sonar.sh start
+sudo usermod -aG sonarqube docker
+
+# Retrieve the instance's public IP address
+INSTANCE_IP=$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4)
+
+# Establish SSH connection with X11 forwarding
+ssh -X ec2-user@$INSTANCE_IP
 
 # Main script execution
 if [[ -f /etc/redhat-release ]]; then
