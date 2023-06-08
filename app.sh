@@ -42,11 +42,6 @@ install_redhat_packages() {
   sudo firewall-cmd --permanent --zone=public --add-port=8888/tcp
   sudo firewall-cmd --reload
 
-  wget https://dl.pstmn.io/download/latest/linux64 -O postman.tar.gz
-  tar -xzf postman.tar.gz -C /opt
-  ln -s /opt/Postman/Postman /usr/bin/postman
-  rm postman.tar.gz
-
   wget https://binaries.sonarsource.com/Distribution/sonarqube/sonarqube-10.0.0.68432.zip
   unzip sonarqube-10.0.0.68432.zip -d /opt
   ln -s /opt/sonarqube-10.0.0.68432 /opt/sonarqube
@@ -54,8 +49,10 @@ install_redhat_packages() {
   rm sonarqube-10.0.0.68432.zip
   firewall-cmd --permanent --zone=public --add-port=9000/tcp
   firewall-cmd --reload
-  /opt/sonarqube/bin/linux-x86-64/sonar.sh start
+  sudo /opt/sonarqube/bin/linux-x86-64/sonar.sh start
   usermod -aG sonarqube docker
+  firewall-cmd --permanent --zone=public --add-port=9000/tcp
+  firewall-cmd --reload
 }
 
 
@@ -92,22 +89,16 @@ install_ubuntu_packages() {
   sudo chmod -R 755 /var/lib/jenkins/
   sudo ufw allow 8080
   sudo ufw allow 8888
-  # Install Postman
-  wget https://dl.pstmn.io/download/latest/linux64 -O postman.tar.gz
-  sudo tar -xzf postman.tar.gz -C /opt
-  sudo ln -s /opt/Postman/Postman /usr/bin/postman
-  rm postman.tar.gz
   # Install SonarQube
   wget https://binaries.sonarsource.com/Distribution/sonarqube/sonarqube-10.0.0.68432.zip
   sudo unzip sonarqube-10.0.0.68432.zip -d /opt
   sudo ln -s /opt/sonarqube-10.0.0.68432 /opt/sonarqube
   sudo chown -R $USER:$USER /opt/sonarqube
   rm sonarqube-10.0.0.68432.zip
-  sudo ufw allow 9000
   sudo /opt/sonarqube/bin/linux-x86-64/sonar.sh start
   sudo usermod -aG sonarqube docker
-  sudo systemctl enable sonarqube
-  }
+  sudo ufw allow 9000
+}
 
 # Function to install Amazon Linux packages
 install_amazon_packages() {
@@ -155,33 +146,20 @@ sudo iptables -A INPUT -p tcp --dport 8080 -j ACCEPT
 sudo service iptables save
 sudo service iptables restart
 
-# Install Postman
-sudo wget https://dl.pstmn.io/download/latest/linux64 -O postman.tar.gz
-sudo tar -xzf postman.tar.gz -C /opt
-sudo ln -s /opt/Postman/Postman /usr/bin/postman
-rm postman.tar.gz
-
 # Install SonarQube
 sudo wget https://binaries.sonarsource.com/Distribution/sonarqube/sonarqube-10.0.0.68432.zip
 sudo unzip sonarqube-10.0.0.68432.zip -d /opt
 sudo ln -s /opt/sonarqube-10.0.0.68432 /opt/sonarqube
 sudo chown -R $USER:$USER /opt/sonarqube
 rm sonarqube-10.0.0.68432.zip
+# Start SonarQube
+sudo /opt/sonarqube/bin/linux-x86-64/sonar.sh start
+sudo usermod -aG sonarqube docker
 
 # Configure firewall for SonarQube
 sudo iptables -A INPUT -p tcp --dport 9000 -j ACCEPT
 sudo service iptables save
 sudo service iptables restart
-
-# Start SonarQube
-sudo /opt/sonarqube/bin/linux-x86-64/sonar.sh start
-sudo usermod -aG sonarqube docker
-
-# Retrieve the instance's public IP address
-INSTANCE_IP=$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4)
-
-# Establish SSH connection with X11 forwarding
-ssh -X ec2-user@$INSTANCE_IP
 
 # Main script execution
 if [[ -f /etc/redhat-release ]]; then
