@@ -9,16 +9,18 @@ install_redhat_packages() {
   sudo yum install -y java-1.8.0-openjdk-devel
   sudo yum install -y git
   sudo yum install -y maven
-  # Install Docker
-  sudo yum install -y yum-utils
+
+
+sudo yum install -y yum-utils
   sudo yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
   sudo yum install -y docker-ce docker-ce-cli containerd.io
   sudo systemctl start docker
   sudo systemctl enable docker
   sudo usermod -aG docker jenkins
   sudo usermod -aG docker sonarqube
-  # Install Jenkins
-  sudo wget -O /etc/yum.repos.d/jenkins.repo https://pkg.jenkins.io/redhat-stable/jenkins.repo
+
+
+sudo wget -O /etc/yum.repos.d/jenkins.repo https://pkg.jenkins.io/redhat-stable/jenkins.repo
   sudo rpm --import https://pkg.jenkins.io/redhat-stable/jenkins.io.key
   sudo yum install -y jenkins
   sudo systemctl start jenkins
@@ -29,13 +31,13 @@ install_redhat_packages() {
   sudo firewall-cmd --permanent --zone=public --add-port=8080/tcp
   sudo firewall-cmd --permanent --zone=public --add-port=8888/tcp
   sudo firewall-cmd --reload
-  # Install Postman
-  sudo wget https://dl.pstmn.io/download/latest/linux64 -O postman.tar.gz
+
+sudo wget https://dl.pstmn.io/download/latest/linux64 -O postman.tar.gz
   sudo tar -xzf postman.tar.gz -C /opt
   sudo ln -s /opt/Postman/Postman /usr/bin/postman
   rm postman.tar.gz
-  # Install SonarQube
-  sudo wget https://binaries.sonarsource.com/Distribution/sonarqube/sonarqube-10.0.0.68432.zip
+
+sudo wget https://binaries.sonarsource.com/Distribution/sonarqube/sonarqube-10.0.0.68432.zip
   sudo unzip sonarqube-10.0.0.68432.zip -d /opt
   sudo ln -s /opt/sonarqube-10.0.0.68432 /opt/sonarqube
   sudo chown -R $USER:$USER /opt/sonarqube
