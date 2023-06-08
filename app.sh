@@ -106,6 +106,13 @@ install_amazon_packages() {
   sudo amazon-linux-extras install -y java-openjdk11
   sudo amazon-linux-extras install -y java-openjdk17
   sudo amazon-linux-extras install -y java-openjdk8
+  # Function to setup Java environment variables
+  setup_java_environment() {
+  echo "export JAVA_HOME=/usr/lib/jvm/java-11-openjdk" >> ~/.bashrc
+  echo "export PATH=\$PATH:\$JAVA_HOME/bin" >> ~/.bashrc
+  echo "export SONAR_JAVA_PATH=/usr/lib/jvm/java-17-openjdk-17.0.7.0.7-3.el9.x86_64/bin/java" >> ~/.bashrc
+  source ~/.bashrc
+}
   sudo yum install -y git
   sudo yum install -y maven
   # Install Docker
