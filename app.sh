@@ -2,11 +2,13 @@
 set -e
 set -x  # Enable verbose mode
 # Function to log commands and their outputs
-command="$1"
-log_file="/installation.log"
-echo "Running command: $command"
-eval "$command" > >(tee -a "$log_file") 2>&1
-echo "Command completed."
+log_command() {
+  command="$1"
+  log_file="/home/ec2-user/installation.log"  # Specify the desired path for the log file
+  echo "Running command: $command"
+  eval "$command" > >(tee -a "$log_file") 2>&1
+  echo "Command completed."
+}
 
 # Function to install Red Hat packages
 install_redhat_packages() {
