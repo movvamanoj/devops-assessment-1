@@ -32,26 +32,46 @@ install_redhat_packages() {
   git clone https://github.com/movvamanoj/movvaweb.git
   
   sudo yum install -y maven
-  sudo yum install -y yum-utils
-  sudo yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
-  sudo yum install -y docker-ce docker-ce-cli containerd.io
-  sudo systemctl start docker
-  sudo systemctl enable docker
+
+# Install Docker dependencies
+sudo yum install -y yum-utils
+
+# Add Docker repository
+sudo yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+
+# Install Docker
+sudo yum install -y docker-ce docker-ce-cli containerd.io
+
+# Start Docker service
+sudo systemctl start docker
+
+# Enable Docker service to start on system boot
+sudo systemctl enable docker
+
+# Configure Docker environment for the current session
+sudo usermod -aG docker $USER
+newgrp docker
+
+# Verify Docker installation
+docker version
+
 
 # Function to install Jenkins
   sudo wget -O /etc/yum.repos.d/jenkins.repo https://pkg.jenkins.io/redhat-stable/jenkins.repo
   sudo rpm --import https://pkg.jenkins.io/redhat-stable/jenkins.io-2023.key
   sudo yum install -y jenkins
+  sudo chown -R jenkins:jenkins /var/lib/jenkins
+  sudo chmod -R 755 /var/lib/jenkins/
+  sudo usermod -aG docker jenkins
   sudo systemctl daemon-reload
   sudo systemctl start jenkins
   sudo systemctl enable jenkins
-  sudo usermod -aG docker jenkins
-  sudo chown -R jenkins:jenkins /var/lib/jenkins
-  sudo chmod -R 755 /var/lib/jenkins/
   sudo firewall-cmd --permanent --zone=public --add-port=8080/tcp
   sudo firewall-cmd --reload
   sudo firewall-cmd --permanent --zone=public --add-port=8888/tcp
   sudo firewall-cmd --reload
+  jenkins_version=$(sudo systemctl status jenkins | grep -oP 'Jenkins Continuous Integration Server, version \K(\d+\.\d+\.\d+)')
+  echo "Jenkins version: $jenkins_version"
 
 }
 if [[ -f /etc/redhat-release ]]; then
