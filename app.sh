@@ -42,15 +42,16 @@ sudo yum-config-manager --add-repo https://download.docker.com/linux/centos/dock
 # Install Docker
 sudo yum install -y docker-ce docker-ce-cli containerd.io
 
+# Configure Docker environment for the current session
+sudo usermod -aG docker $USER
+newgrp docker
+
 # Start Docker service
 sudo systemctl start docker
 
 # Enable Docker service to start on system boot
 sudo systemctl enable docker
 
-# Configure Docker environment for the current session
-sudo usermod -aG docker $USER
-newgrp docker
 
 # Verify Docker installation
 docker version
