@@ -10,15 +10,13 @@ install_redhat_packages() {
   sudo yum install -y java-11-openjdk-devel
   echo "export JAVA_HOME=/usr/lib/jvm/java-11-openjdk" >> ~/.bashrc
   source ~/.bashrc
-
+  
+  # Install Java 8
+  sudo yum install -y java-1.8.0-openjdk-devel
+  
   # Install Java 17
   sudo yum install -y java-17-openjdk-devel
   echo "export SONAR_JAVA_PATH=/usr/lib/jvm/java-17-openjdk-17.0.7.0.7-3.el9.x86_64" >> ~/.bashrc
-  source ~/.bashrc
-
-  # Install Java 8
-  sudo yum install -y java-1.8.0-openjdk-devel
-  echo "export JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk" >> ~/.bashrc
   source ~/.bashrc
 
   sudo yum install -y git
