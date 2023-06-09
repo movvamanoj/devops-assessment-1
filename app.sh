@@ -5,21 +5,32 @@ install_redhat_packages() {
   # Install Red Hat specific packages
   sudo yum update -y
   sudo yum install -y wget unzip
-  
-  # Install Java 11
+   # Install Java 11
   sudo yum install -y java-11-openjdk-devel
-  echo "export JAVA_HOME=/usr/lib/jvm/java-11-openjdk" >> ~/.bashrc
+  echo "export JAVA11_HOME=/usr/lib/jvm/java-11-openjdk" >> ~/.bashrc
   source ~/.bashrc
-  
+
   # Install Java 8
   sudo yum install -y java-1.8.0-openjdk-devel
-  
+  echo "export JAVA8_HOME=/usr/lib/jvm/java-1.8.0-openjdk" >> ~/.bashrc
+  source ~/.bashrc
+
   # Install Java 17
   sudo yum install -y java-17-openjdk-devel
-  echo "export SONAR_JAVA_PATH=/usr/lib/jvm/java-17-openjdk-17.0.7.0.7-3.el9.x86_64" >> ~/.bashrc
+  echo "export JAVA17_HOME=/usr/lib/jvm/java-17-openjdk" >> ~/.bashrc
   source ~/.bashrc
 
   sudo yum install -y git
+  mkdir github
+  cd github
+  git config --global credential.helper cache
+  git config --global credential.helper 'cache --timeout=3600'
+ # Read Git token from file
+  GIT_TOKEN=$(cat "/home/movvamanoj/gitrepo/gittok.txt")
+  # Set Git token as environment variable
+  export GIT_TOKEN="$GIT_TOKEN"
+  git clone https://github.com/movvamanoj/movvaweb.git
+  
   sudo yum install -y maven
   sudo yum install -y yum-utils
   sudo yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
