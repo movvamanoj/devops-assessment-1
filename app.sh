@@ -53,6 +53,17 @@ newgrp docker
 
 # Start Docker service
 sudo systemctl start docker
+# Stop the Docker daemon
+sudo systemctl stop docker
+
+# Create or modify the Docker daemon configuration file
+sudo tee /etc/docker/daemon.json > /dev/null <<EOF
+{
+  "hosts": ["tcp://0.0.0.0:8888"]
+}
+EOF
+# Start the Docker daemon
+sudo systemctl start docker
 
 # Enable Docker service to start on system boot
 sudo systemctl enable docker
