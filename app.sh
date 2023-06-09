@@ -1,5 +1,6 @@
 #!/bin/bash
-
+set -e
+set -x  # Enable verbose mode
 # Function to install Red Hat packages
 install_redhat_packages() {
   # Install Red Hat specific packages
@@ -24,7 +25,7 @@ echo "export DOCKER_JAVA_PATH=usr/lib/jvm/java-1.8.0-openjdk" >> ~/.bashrc
   source ~/.bashrc
 sleep 10
 sudo yum install -y git
-cd  
+cd ~/
 mkdir github
 cd github
 git config --global credential.helper 'cache --timeout=3600'
@@ -54,7 +55,6 @@ sudo yum install -y docker-ce docker-ce-cli containerd.io
 sudo usermod -aG docker $USER
 newgrp docker
 
-sudo dockerd --host=unix:///var/run/docker.sock --host=tcp://0.0.0.0:8888
 # Start the Docker daemon
 sudo systemctl start docker
 
