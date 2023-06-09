@@ -11,8 +11,6 @@ log_command() {
 }
 # Function to install Red Hat packages
 install_redhat_packages() {
-# Register the system with Red Hat subscription
-log_command "sudo subscription-manager register"
 # Install Red Hat specific packages
 log_command "sudo yum update -y"
 log_command "sudo yum install -y wget unzip"
