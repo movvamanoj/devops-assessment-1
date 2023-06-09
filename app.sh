@@ -9,11 +9,14 @@ install_redhat_packages() {
   sudo yum install -y java-11-openjdk-devel
   echo "export JAVA11_HOME=/usr/lib/jvm/java-11-openjdk" >> ~/.bashrc
   source ~/.bashrc
-
+  
   # Install Java 8
   sudo yum install -y java-1.8.0-openjdk-devel
   echo "export JAVA8_HOME=/usr/lib/jvm/java-1.8.0-openjdk" >> ~/.bashrc
   source ~/.bashrc
+echo "export DOCKER_JAVA_PATH=usr/lib/jvm/java-1.8.0-openjdk" >> ~/.bashrc
+  source ~/.bashrc
+  
 
   # Install Java 17
   sudo yum install -y java-17-openjdk-devel
@@ -51,17 +54,7 @@ sudo yum install -y docker-ce docker-ce-cli containerd.io
 sudo usermod -aG docker $USER
 newgrp docker
 
-# Start Docker service
-sudo systemctl start docker
-# Stop the Docker daemon
-sudo systemctl stop docker
-
-# Create or modify the Docker daemon configuration file
-sudo tee /etc/docker/daemon.json > /dev/null <<EOF
-{
-  "hosts": ["tcp://0.0.0.0:8888"]
-}
-EOF
+sudo dockerd --host=unix:///var/run/docker.sock --host=tcp://0.0.0.0:8888
 # Start the Docker daemon
 sudo systemctl start docker
 
