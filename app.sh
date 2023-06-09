@@ -1,8 +1,11 @@
 #!/bin/bash
 set -e
 set -x  # Enable verbose mode
+
 # Function to install Red Hat packages
 install_redhat_packages() {
+# Register the system with Red Hat subscription
+sudo subscription-manager register
 # Install Red Hat specific packages
 sudo yum update -y
 sudo yum install -y wget unzip
