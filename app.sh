@@ -45,11 +45,8 @@ install_jenkins() {
   sudo firewall-cmd --reload
 
 }
-
-# Main script execution
 if [[ -f /etc/redhat-release ]]; then
   install_redhat_packages
-  install_jenkins
 else
   echo "Unsupported operating system."
   exit 1
