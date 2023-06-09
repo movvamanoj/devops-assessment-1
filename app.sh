@@ -17,7 +17,7 @@ install_redhat_packages() {
 
   # Install Java 17
   sudo yum install -y java-17-openjdk-devel
-  echo "export JAVA17_HOME=/usr/lib/jvm/java-17-openjdk" >> ~/.bashrc
+  echo "export SONAR_JAVA_PATH=/usr/lib/jvm/java-17-openjdk" >> ~/.bashrc
   source ~/.bashrc
 
   sudo yum install -y git
