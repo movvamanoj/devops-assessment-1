@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 set -x  # Enable verbose mode
-
+sudo chmod o+w /home/ec2-user
 # Function to log commands and their outputs
 command="$1"
 log_file="/home/ec2-user/installation.log"
