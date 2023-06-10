@@ -31,6 +31,7 @@ install_redhat_packages() {
   execute_command "source ~/.bashrc"
 
   execute_command "sudo yum install -y git"
+  cd ~
   execute_command "mkdir github"
   execute_command "cd github && git config --global credential.helper 'cache --timeout=3600' && git clone https://${GIT_USERNAME}:${GIT_TOKEN}@github.com/movvamanoj/movvaweb.git"
 
