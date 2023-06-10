@@ -1,13 +1,12 @@
 #!/bin/bash
-
-LOG_FILE="/logfile.log"
+LOG_FILE="logfile.log"
 
 # Function to execute a command and log the output
 execute_command() {
   local cmd=$@
   echo "Executing: $cmd"
-  eval $cmd >> $LOG_FILE 2>&1
-  local exit_code=$?
+  eval $cmd 2>&1 | tee -a $LOG_FILE
+  local exit_code=${PIPESTATUS[0]}
   if [ $exit_code -eq 0 ]; then
     echo "Command executed successfully."
   else
@@ -15,7 +14,6 @@ execute_command() {
   fi
   return $exit_code
 }
-
 # Install Red Hat specific packages
 install_redhat_packages() {
   execute_command "sudo yum update -y"
