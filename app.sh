@@ -1,99 +1,121 @@
 #!/bin/bash
-LOG_FILE="~/logfile.log"
 
-# Function to execute a command and log the output
-execute_command() {
-  local cmd=$@
-  echo "Executing: $cmd"
-  eval $cmd 2>&1 | tee -a $LOG_FILE
-  local exit_code=${PIPESTATUS[0]}
-  if [ $exit_code -eq 0 ]; then
-    echo "Command executed successfully."
-  else
-    echo "Command failed with exit code $exit_code. Check $LOG_FILE for details."
-  fi
-  return $exit_code
+# Check if a package is installed
+is_package_installed() {
+  rpm -q "$1" >/dev/null 2>&1
 }
+
 # Install Red Hat specific packages
 install_redhat_packages() {
-  execute_command "sudo yum update -y"
-  execute_command "sudo yum install -y wget unzip"
+  sudo yum update -y
+  sudo yum install -y wget unzip
 
-  execute_command "sudo yum install -y java-11-openjdk-devel"
-  echo "export JAVA_HOME=/usr/lib/jvm/java-11-openjdk" >> ~/.bashrc
+  if ! is_package_installed "java-11-openjdk-devel"; then
+    sudo yum install -y java-11-openjdk-devel
+    echo "export JAVA_HOME=/usr/lib/jvm/java-11-openjdk" >> ~/.bashrc
+  fi
 
-  execute_command "sudo yum install -y java-1.8.0-openjdk-devel"
-  echo "export JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk" >> ~/.bashrc
+  if ! is_package_installed "java-1.8.0-openjdk-devel"; then
+    sudo yum install -y java-1.8.0-openjdk-devel
+    echo "export JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk" >> ~/.bashrc
+  fi
 
-  execute_command "sudo yum install -y java-17-openjdk-devel"
-  echo "export SONAR_JAVA_PATH=/usr/lib/jvm/java-17-openjdk" >> ~/.bashrc
+  if ! is_package_installed "java-17-openjdk-devel"; then
+    sudo yum install -y java-17-openjdk-devel
+    echo "export SONAR_JAVA_PATH=/usr/lib/jvm/java-17-openjdk" >> ~/.bashrc
+  fi
 
-  execute_command "source ~/.bashrc"
+  source ~/.bashrc
 
-  execute_command "sudo yum install -y git"
-  cd ~
-  execute_command "mkdir github"
-  execute_command "cd github && git config --global credential.helper 'cache --timeout=3600' && git clone https://${GIT_USERNAME}:${GIT_TOKEN}@github.com/movvamanoj/movvaweb.git"
+  if ! is_package_installed "git"; then
+    sudo yum install -y git
+  fi
 
-  execute_command "sudo yum install -y maven"
+  if [ ! -d ~/github ]; then
+    mkdir ~/github
+    cd ~/github && git config --global credential.helper 'cache --timeout=3600' && git clone https://${GIT_USERNAME}:${GIT_TOKEN}@github.com/movvamanoj/movvaweb.git
+  fi
 
-  execute_command "sudo yum install -y firewalld"
-  execute_command "sudo systemctl start firewalld"
-  execute_command "sudo systemctl enable firewalld"
-  execute_command "sudo systemctl daemon-reload"
+  if ! is_package_installed "maven"; then
+    sudo yum install -y maven
+  fi
 
-  execute_command "sudo firewall-cmd --permanent --zone=public --add-port=8080/tcp"
-  execute_command "sudo firewall-cmd --permanent --zone=public --add-port=8888/tcp"
-  execute_command "sudo firewall-cmd --permanent --zone=public --add-port=9000/tcp"
-  execute_command "sudo firewall-cmd --permanent --zone=public --add-port=9001/tcp"
-  execute_command "sudo firewall-cmd --reload"
+  if ! is_package_installed "firewalld"; then
+    sudo yum install -y firewalld
+    sudo systemctl start firewalld
+    sudo systemctl enable firewalld
+    sudo systemctl daemon-reload
+  fi
 
-  execute_command "sudo yum install -y yum-utils device-mapper-persistent-data lvm2"
-  execute_command "sudo yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo"
-  execute_command "sudo yum install -y docker-ce docker-ce-cli containerd.io"
-  execute_command "sudo usermod -aG docker $USER"
-  execute_command "sudo systemctl start docker"
-  execute_command "sudo systemctl enable docker"
+  if ! sudo firewall-cmd --list-ports | grep -q "8080/tcp"; then
+    sudo firewall-cmd --permanent --zone=public --add-port=8080/tcp
+  fi
 
-  execute_command "docker version"
+  if ! sudo firewall-cmd --list-ports | grep -q "8888/tcp"; then
+    sudo firewall-cmd --permanent --zone=public --add-port=8888/tcp
+  fi
 
-  execute_command "sudo wget -O /etc/yum.repos.d/jenkins.repo https://pkg.jenkins.io/redhat-stable/jenkins.repo"
-  execute_command "sudo rpm --import https://pkg.jenkins.io/redhat-stable/jenkins.io.key"
-  execute_command "sudo yum install -y jenkins"
-  execute_command "sudo chown -R jenkins:jenkins /var/lib/jenkins"
-  execute_command "sudo chmod -R 755 /var/lib/jenkins"
-  execute_command "sudo usermod -aG docker jenkins"
-  sudo chown jenkins:jenkins /var/cache/jenkins/war/WEB-INF/jenkins-cli.jar
-  sudo chmod 755 /var/cache/jenkins/war/WEB-INF/jenkins-cli.jar
-  execute_command "sudo systemctl daemon-reload"
-  execute_command "sudo systemctl start jenkins"
-  execute_command "sudo systemctl enable jenkins"
+  if ! sudo firewall-cmd --list-ports | grep -q "9000/tcp"; then
+    sudo firewall-cmd --permanent --zone=public --add-port=9000/tcp
+  fi
 
-  echo "Waiting for Jenkins to start..."
-  while ! sudo systemctl is-active --quiet jenkins; do
-    sleep 5
-  done
-  
-  jenkins_version=$(sudo systemctl status jenkins | grep -oP 'Jenkins Continuous Integration Server, version \K(\d+\.\d+\.\d+)')
-  echo "Jenkins version: $jenkins_version"
+  if ! sudo firewall-cmd --list-ports | grep -q "9001/tcp"; then
+    sudo firewall-cmd --permanent --zone=public --add-port=9001/tcp
+  fi
 
-  execute_command "jenkins_password=$(sudo cat /var/lib/jenkins/secrets/initialAdminPassword)"
+  sudo firewall-cmd --reload
 
-  execute_command "sudo java -jar /var/cache/jenkins/war/WEB-INF/jenkins-cli.jar -s http://localhost:8080/ install-plugin --all"
+  if ! is_package_installed "yum-utils"; then
+    sudo yum install -y yum-utils device-mapper-persistent-data lvm2
+  fi
 
-  execute_command "sudo java -jar /var/cache/jenkins/war/WEB-INF/jenkins-cli.jar -s http://localhost:8080/ -auth admin:${JENKINS_PASSWORD} create-user ${JENKINS_USERNAME} ${JENKINS_PASSWORD} --full-name ${JENKINS_FULL_NAME} --email ${JENKINS_EMAIL}"
+  if ! is_package_installed "docker-ce"; then
+    sudo yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+    sudo yum install -y docker-ce docker-ce-cli containerd.io
+    sudo usermod -aG docker $USER
+    sudo systemctl start docker
+    sudo systemctl enable docker
+  fi
 
-  execute_command "sudo java -jar /var/cache/jenkins/war/WEB-INF/jenkins-cli.jar -s http://localhost:8080/ restart"
+  docker version
 
-  sleep 30
+  if ! is_package_installed "jenkins"; then
+    sudo wget -O /etc/yum.repos.d/jenkins.repo https://pkg.jenkins.io/redhat-stable/jenkins.repo
+    sudo rpm --import https://pkg.jenkins.io/redhat-stable/jenkins.io.key
+    sudo yum install -y jenkins
+    sudo chown -R jenkins:jenkins /var/lib/jenkins
+    sudo chmod -R 755 /var/lib/jenkins
+    sudo usermod -aG docker jenkins
+    sudo chown jenkins:jenkins /var/cache/jenkins/war/WEB-INF/jenkins-cli.jar
+    sudo chmod 755 /var/cache/jenkins/war/WEB-INF/jenkins-cli.jar
+    sudo systemctl daemon-reload
+    sudo systemctl start jenkins
+    sudo systemctl enable jenkins
 
-  echo "Jenkins installed successfully."
+    echo "Waiting for Jenkins to start..."
+    while ! sudo systemctl is-active --quiet jenkins; do
+      sleep 5
+    done
+
+    jenkins_version=$(sudo systemctl status jenkins | grep -oP 'Jenkins Continuous Integration Server, version \K(\d+\.\d+\.\d+)')
+    echo "Jenkins version: $jenkins_version"
+
+    jenkins_password=$(sudo cat /var/lib/jenkins/secrets/initialAdminPassword)
+
+    sudo java -jar /var/cache/jenkins/war/WEB-INF/jenkins-cli.jar -s http://localhost:8080/ install-plugin --all
+
+    sudo java -jar /var/cache/jenkins/war/WEB-INF/jenkins-cli.jar -s http://localhost:8080/ -auth admin:${JENKINS_PASSWORD} create-user ${JENKINS_USERNAME} ${JENKINS_PASSWORD} --full-name ${JENKINS_FULL_NAME} --email ${JENKINS_EMAIL}
+
+    sudo java -jar /var/cache/jenkins/war/WEB-INF/jenkins-cli.jar -s http://localhost:8080/ restart
+
+    sleep 30
+
+    echo "Jenkins installed successfully."
+  fi
 }
 
 # Main script execution
 if [[ -f /etc/redhat-release ]]; then
-  # Redirect all script output to the log file and display it on the console
-  exec > >(tee -a "$LOG_FILE") 2>&1
   install_redhat_packages
 else
   echo "Unsupported operating system."
