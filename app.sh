@@ -1,5 +1,5 @@
 #!/bin/bash
-LOG_FILE="$HOME/logfile.log"
+LOG_FILE="$HOME/ec2-user//logfile.log"
 
 # Function to execute a command and log the output
 execute_command() {
@@ -62,6 +62,8 @@ install_redhat_packages() {
   execute_command "sudo chown -R jenkins:jenkins /var/lib/jenkins"
   execute_command "sudo chmod -R 755 /var/lib/jenkins"
   execute_command "sudo usermod -aG docker jenkins"
+  sudo chown jenkins:jenkins /var/cache/jenkins/war/WEB-INF/jenkins-cli.jar
+  sudo chmod 755 /var/cache/jenkins/war/WEB-INF/jenkins-cli.jar
   execute_command "sudo systemctl daemon-reload"
   execute_command "sudo systemctl start jenkins"
   execute_command "sudo systemctl enable jenkins"
@@ -70,7 +72,7 @@ install_redhat_packages() {
   while ! sudo systemctl is-active --quiet jenkins; do
     sleep 5
   done
-
+  
   jenkins_version=$(sudo systemctl status jenkins | grep -oP 'Jenkins Continuous Integration Server, version \K(\d+\.\d+\.\d+)')
   echo "Jenkins version: $jenkins_version"
 
