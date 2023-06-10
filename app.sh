@@ -86,6 +86,12 @@ sudo systemctl daemon-reload
 sleep 15
 sudo systemctl start jenkins
 sudo systemctl enable jenkins
+
+sudo yum install -y firewalld
+sudo systemctl start firewalld
+sudo systemctl enable firewalld
+
+
 sudo firewall-cmd --permanent --zone=public --add-port=8080/tcp
 sudo firewall-cmd --reload
 sudo firewall-cmd --permanent --zone=public --add-port=8888/tcp
