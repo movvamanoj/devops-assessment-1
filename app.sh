@@ -1,5 +1,5 @@
 #!/bin/bash
-LOG_FILE="logfile.log"
+LOG_FILE="$HOME/logfile.log"
 
 # Function to execute a command and log the output
 execute_command() {
