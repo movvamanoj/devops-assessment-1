@@ -31,6 +31,20 @@ echo "export SONAR_JAVA_PATH=/usr/lib/jvm/java-17-openjdk" >> ~/.bashrc
 source ~/.bashrc
 echo "Installing java17 done..."
 
+sudo yum install -y firewalld
+sudo systemctl start firewalld
+sudo systemctl enable firewalld
+sudo systemctl daemon-reload
+
+sudo firewall-cmd --permanent --zone=public --add-port=8080/tcp
+sudo firewall-cmd --reload
+sudo firewall-cmd --permanent --zone=public --add-port=8888/tcp
+sudo firewall-cmd --reload
+sudo firewall-cmd --permanent --zone=public --add-port=9000/tcp
+sudo firewall-cmd --reload
+sudo firewall-cmd --permanent --zone=public --add-port=9001/tcp
+sudo firewall-cmd --reload
+
 echo "Installing Git..."
 
 sudo yum install -y git
@@ -87,15 +101,6 @@ sleep 15
 sudo systemctl start jenkins
 sudo systemctl enable jenkins
 
-sudo yum install -y firewalld
-sudo systemctl start firewalld
-sudo systemctl enable firewalld
-
-
-sudo firewall-cmd --permanent --zone=public --add-port=8080/tcp
-sudo firewall-cmd --reload
-sudo firewall-cmd --permanent --zone=public --add-port=8888/tcp
-sudo firewall-cmd --reload
   # Wait for Jenkins to ready
 sleep 10
 jenkins_version=$(sudo systemctl status jenkins | grep -oP 'Jenkins Continuous Integration Server, version \K(\d+\.\d+\.\d+)')
@@ -116,15 +121,14 @@ sudo java -jar /var/cache/jenkins/war/WEB-INF/jenkins-cli.jar -s http://localhos
 # Wait for Jenkins to restart
 sleep 30
 
-# Read admin user credentials from file
-credentials_path="/path/to/jenkins-credentials.txt"
-username=$(grep -oP 'username=\K.*' "$credentials_path")
-password=$(grep -oP 'password=\K.*' "$credentials_path")
-full_name=$(grep -oP 'full_name=\K.*' "$credentials_path")
-email=$(grep -oP 'email=\K.*' "$credentials_path")
+# Read admin user credentials from Terraform
+username=${JENKINS_USERNAME}
+password=${JENKINS_PASSWORD}
+full_name=${JENKINS_FULL_NAME}
+email=${JENKINS_EMAIL}
 
 # Create admin user
-sudo java -jar /var/cache/jenkins/war/WEB-INF/jenkins-cli.jar -s http://localhost:8080/ -auth admin:${JENKINS_PASSWORD} create-user ${username} ${password} --full-name ${full_name} --email ${email}
+sudo java -jar /var/cache/jenkins/war/WEB-INF/jenkins-cli.jar -s http://localhost:8080/ -auth admin:${JENKINS_PASSWORD} create-user ${JENKINS_USERNAME} ${JENKINS_PASSWORD} --full-name ${JENKINS_FULL_NAME} --email ${JENKINS_EMAIL}
 echo "Jenkins installed successfully."
 
 
