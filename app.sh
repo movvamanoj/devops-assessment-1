@@ -6,24 +6,7 @@
 install_redhat_packages() {
 # Install Red Hat specific packages
 sudo yum update -y
-
 sudo yum install -y wget unzip
-
-
-sudo yum install -y firewalld
-sudo systemctl start firewalld
-sudo systemctl enable firewalld
-sudo systemctl daemon-reload
-
-sudo firewall-cmd --permanent --zone=public --add-port=8080/tcp
-sudo firewall-cmd --reload
-sudo firewall-cmd --permanent --zone=public --add-port=8888/tcp
-sudo firewall-cmd --reload
-sudo firewall-cmd --permanent --zone=public --add-port=9000/tcp
-sudo firewall-cmd --reload
-sudo firewall-cmd --permanent --zone=public --add-port=9001/tcp
-sudo firewall-cmd --reload
-
 # Install Java 11
 echo "Installing java11..."
 sudo yum install -y java-11-openjdk-devel
@@ -64,6 +47,18 @@ sudo yum install -y maven
 echo "Maven installed successfully."
 
 sleep 10
+
+sudo yum install -y firewalld
+sudo systemctl start firewalld
+sudo systemctl enable firewalld
+sudo systemctl daemon-reload
+
+sudo firewall-cmd --permanent --zone=public --add-port=8080/tcp
+sudo firewall-cmd --permanent --zone=public --add-port=8888/tcp
+sudo firewall-cmd --permanent --zone=public --add-port=9000/tcp
+sudo firewall-cmd --permanent --zone=public --add-port=9001/tcp
+sudo firewall-cmd --reload
+
 echo "Installing Docker..."
 # Install Docker dependencies
 sudo yum install -y yum-utils device-mapper-persistent-data lvm2
