@@ -1,5 +1,5 @@
 #!/bin/bash
-LOG_FILE="$HOME/ec2-user//logfile.log"
+LOG_FILE="~/logfile.log"
 
 # Function to execute a command and log the output
 execute_command() {
