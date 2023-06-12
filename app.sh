@@ -1,10 +1,5 @@
 #!/bin/bash
 
-# Check if a package is installed
-is_package_installed() {
-  rpm -q "$1" >/dev/null 2>&1
-}
-
 # Install Red Hat specific packages
 install_redhat_packages() {
   sudo yum update -y
