@@ -1,4 +1,18 @@
 #!/bin/bash
+# Set the environment variables
+my_cred_content=$(terraform output -raw my_cred_content)
+export GIT_USERNAME=$(grep -oP 'git_username=\K.*' <<< "$(terraform output -raw data.local_file.my_cred)")
+export GIT_TOKEN=$(grep -oP 'git_token=\K.*' <<< "$(terraform output -raw data.local_file.my_cred)")
+export DOCKER_USERNAME=$(grep -oP 'docker_username=\K.*' <<< "$(terraform output -raw data.local_file.my_cred)")
+export DOCKER_PASSWORD=$(grep -oP 'docker_password=\K.*' <<< "$(terraform output -raw data.local_file.my_cred)")
+export JENKINS_USERNAME=$(grep -oP 'jenkins_username=\K.*' <<< "$(terraform output -raw data.local_file.my_cred)")
+export JENKINS_PASSWORD=$(grep -oP 'jenkins_password=\K.*' <<< "$(terraform output -raw data.local_file.my_cred)")
+export JENKINS_FULL_NAME=$(grep -oP 'full_name=\K.*' <<< "$(terraform output -raw data.local_file.my_cred)")
+export JENKINS_EMAIL=$(grep -oP 'email=\K.*' <<< "$(terraform output -raw data.local_file.my_cred)")
+export SONARQUBE_USERNAME=$(grep -oP 'sonarqube_username=\K.*' <<< "$(terraform output -raw data.local_file.my_cred)")
+export SONARQUBE_PASSWORD=$(grep -oP 'sonarqube_password=\K.*' <<< "$(terraform output -raw data.local_file.my_cred)")
+# Call your bash script here, passing the environment variables
+./app.sh "$GIT_USERNAME" "$GIT_TOKEN" "$DOCKER_USERNAME" "$DOCKER_PASSWORD" "$JENKINS_USERNAME" "$JENKINS_PASSWORD" "$JENKINS_FULL_NAME" "$JENKINS_EMAIL" "$SONARQUBE_USERNAME" "$SONARQUBE_PASSWORD"
 
 # Function to check if a package is installed
 is_package_installed() {
