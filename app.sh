@@ -102,8 +102,7 @@ if ! is_package_installed "jenkins"; then
   while ! sudo systemctl is-active --quiet jenkins; do
     sleep 5
   done
-fi
-  
+
     jenkins_version=$(sudo systemctl status jenkins | grep -oP 'Jenkins Continuous Integration Server, version \K(\d+\.\d+\.\d+)')
     echo "Jenkins version: $jenkins_version"
 
