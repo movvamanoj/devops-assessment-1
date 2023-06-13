@@ -1,5 +1,15 @@
 #!/bin/bash
 
+# Function to check if a package is installed
+is_package_installed() {
+  local package_name="$1"
+  if rpm -q "$package_name" &>/dev/null; then
+    return 0 # Package is installed
+  else
+    return 1 # Package is not installed
+  fi
+}
+
 # Install Red Hat specific packages
 install_redhat_packages() {
   sudo yum update -y
@@ -26,10 +36,10 @@ install_redhat_packages() {
     sudo yum install -y git
   fi
 
-  if [ ! -d ~/github ]; then
-    mkdir ~/github
-    cd ~/github && git config --global credential.helper 'cache --timeout=3600' && git clone https://${GIT_USERNAME}:${GIT_TOKEN}@github.com/movvamanoj/movvaweb.git
-  fi
+if [ ! -d "$HOME/github" ]; then
+  mkdir "$HOME/github"
+  cd "$HOME/github" && git config --global credential.helper 'cache --timeout=3600' && git clone "https://${GIT_USERNAME}:${GIT_TOKEN}@github.com/movvamanoj/movvaweb.git"
+fi
 
   if ! is_package_installed "maven"; then
     sudo yum install -y maven
@@ -73,25 +83,27 @@ install_redhat_packages() {
   fi
 
   docker version
+if ! is_package_installed "jenkins"; then
+  jenkins_repo_url="https://pkg.jenkins.io/redhat-stable/jenkins.repo"
+  jenkins_cli_path="/var/cache/jenkins/war/WEB-INF/jenkins-cli.jar"
+  sudo curl -fsSL "$jenkins_repo_url" -o /etc/yum.repos.d/jenkins.repo
+  sudo rpm --import https://pkg.jenkins.io/redhat-stable/jenkins.io.key
+  sudo yum install -y jenkins
+  sudo chown -R jenkins:jenkins /var/lib/jenkins
+  sudo chmod -R 755 /var/lib/jenkins
+  sudo usermod -aG docker jenkins
+  sudo chown jenkins:jenkins "$jenkins_cli_path"
+  sudo chmod 755 "$jenkins_cli_path"
+  sudo systemctl daemon-reload
+  sudo systemctl start jenkins
+  sudo systemctl enable jenkins
 
-  if ! is_package_installed "jenkins"; then
-    sudo wget -O /etc/yum.repos.d/jenkins.repo https://pkg.jenkins.io/redhat-stable/jenkins.repo
-    sudo rpm --import https://pkg.jenkins.io/redhat-stable/jenkins.io.key
-    sudo yum install -y jenkins
-    sudo chown -R jenkins:jenkins /var/lib/jenkins
-    sudo chmod -R 755 /var/lib/jenkins
-    sudo usermod -aG docker jenkins
-    sudo chown jenkins:jenkins /var/cache/jenkins/war/WEB-INF/jenkins-cli.jar
-    sudo chmod 755 /var/cache/jenkins/war/WEB-INF/jenkins-cli.jar
-    sudo systemctl daemon-reload
-    sudo systemctl start jenkins
-    sudo systemctl enable jenkins
-
-    echo "Waiting for Jenkins to start..."
-    while ! sudo systemctl is-active --quiet jenkins; do
-      sleep 5
-    done
-
+  echo "Waiting for Jenkins to start..."
+  while ! sudo systemctl is-active --quiet jenkins; do
+    sleep 5
+  done
+fi
+  
     jenkins_version=$(sudo systemctl status jenkins | grep -oP 'Jenkins Continuous Integration Server, version \K(\d+\.\d+\.\d+)')
     echo "Jenkins version: $jenkins_version"
 
