@@ -88,17 +88,28 @@ if ! is_package_installed "jenkins"; then
   sudo curl "$jenkins_repo_url" -o /etc/yum.repos.d/jenkins.repo
   sudo rpm --import https://pkg.jenkins.io/redhat/jenkins.io-2023.key
   sudo yum install -y jenkins
+  sudo systemctl start jenkins
+  sudo systemctl enable jenkins
+echo "Waiting for Jenkins to start..."
+  while ! sudo systemctl is-active --quiet jenkins; do
+    sleep 5
+  done
+ jenkins_cli_path="/var/cache/jenkins/war/WEB-INF/jenkins-cli.jar"
+  if [ -f "$jenkins_cli_path" ]; then
+    sudo chown jenkins:jenkins "$jenkins_cli_path"
+    sudo chmod 755 "$jenkins_cli_path"
+  else
+    echo "jenkins-cli.jar file not found in the expected location."
+    # Handle the error or perform any necessary actions
+  fi
   sudo chown -R jenkins:jenkins /var/lib/jenkins
   sudo chmod -R 755 /var/lib/jenkins
   sudo usermod -aG docker jenkins
   jenkins_cli_path="/var/cache/jenkins/war/WEB-INF/jenkins-cli.jar"
-  sudo chown jenkins:jenkins "$jenkins_cli_path"
-  sudo chmod 755 "$jenkins_cli_path"
   sudo systemctl daemon-reload
-  sudo systemctl start jenkins
-  sudo systemctl enable jenkins
+  sudo systemctl restart jenkins
 
-  echo "Waiting for Jenkins to start..."
+  echo "Waiting for Jenkins to Re-Start..."
   while ! sudo systemctl is-active --quiet jenkins; do
     sleep 5
   done
