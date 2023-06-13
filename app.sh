@@ -36,9 +36,15 @@ install_redhat_packages() {
     sudo yum install -y git
   fi
 
+
+# Get GitHub username and token from arguments
+github_username=$1
+github_token=$2
+
+# Clone the repository
 if [ ! -d "$HOME/github" ]; then
   mkdir "$HOME/github"
-  cd "$HOME/github" && git config --global credential.helper 'cache --timeout=3600' && git clone "https://${GIT_USERNAME}:${GIT_TOKEN}@github.com/movvamanoj/movvaweb.git"
+  cd "$HOME/github" && git config --global credential.helper 'cache --timeout=3600' && git clone "https://${github_username}:${github_token}@github.com/movvamanoj/movvaweb.git"
 fi
 
   if ! is_package_installed "maven"; then
@@ -81,8 +87,18 @@ fi
     sudo systemctl start docker
     sudo systemctl enable docker
   fi
-
   docker version
+
+# Install expect package
+sudo yum install -y expect
+
+# Verify if expect is installed
+if rpm -q expect >/dev/null; then
+  echo "expect installed successfully."
+else
+  echo "Failed to install expect."
+fi
+
 if ! is_package_installed "jenkins"; then
   jenkins_repo_url="https://pkg.jenkins.io/redhat/jenkins.repo"
   sudo curl "$jenkins_repo_url" -o /etc/yum.repos.d/jenkins.repo
@@ -115,11 +131,19 @@ echo "Waiting for Jenkins to start..."
 
     jenkins_password=$(sudo cat /var/lib/jenkins/secrets/initialAdminPassword)
 
-    sudo java -jar /var/cache/jenkins/war/WEB-INF/jenkins-cli.jar -s http://localhost:8080/ install-plugin --all
+# Use expect to automate login and provide the password
+  expect -c "
+    spawn java -jar \"$jenkins_cli_path\" -s http://localhost:8080 login
+    expect \"Password:\"
+    send \"$jenkins_password\r\"
+    interact
+  "
 
-    sudo java -jar /var/cache/jenkins/war/WEB-INF/jenkins-cli.jar -s http://localhost:8080/ -auth admin:${JENKINS_PASSWORD} create-user ${JENKINS_USERNAME} ${JENKINS_PASSWORD} --full-name ${JENKINS_FULL_NAME} --email ${JENKINS_EMAIL}
+    sudo java -jar "$jenkins_cli_path" -s http://localhost:8080/ install-plugin --all
 
-    sudo java -jar /var/cache/jenkins/war/WEB-INF/jenkins-cli.jar -s http://localhost:8080/ restart
+    sudo java -jar "$jenkins_cli_path" -s http://localhost:8080/ -auth admin:${JENKINS_PASSWORD} create-user ${JENKINS_USERNAME} ${JENKINS_PASSWORD} --full-name ${JENKINS_FULL_NAME} --email ${JENKINS_EMAIL}
+
+    sudo java -jar "$jenkins_cli_path" -s http://localhost:8080/ restart
 
     sleep 30
 
