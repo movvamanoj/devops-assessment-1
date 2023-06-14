@@ -1,5 +1,65 @@
 #!/bin/bash
 
+
+# Function to check if a package is installed
+is_package_installed() {
+  local package_name="$1"
+  if rpm -q "$package_name" &>/dev/null; then
+    return 0 # Package is installed
+  else
+    return 1 # Package is not installed
+  fi
+}
+
+# Install Red Hat-specific packages
+install_redhat_packages() {
+  sudo yum update -y
+  sudo yum install -y wget unzip
+
+
+# Check if Python is installed
+if ! command -v python >/dev/null 2>&1; then
+  echo "Python is not installed. Installing Python..."
+  sudo yum install -y python
+fi
+
+# Check if pip is installed
+if ! command -v pip >/dev/null 2>&1; then
+  echo "Pip is not installed. Installing pip..."
+  sudo yum install -y python-pip
+fi
+
+# Check if boto3 is installed
+if ! python -c "import boto3" >/dev/null 2>&1; then
+  echo "Boto3 is not installed. Installing boto3..."
+  sudo pip install boto3
+fi
+
+
+# Check if yum-utils is installed
+if ! command -v yum-utils >/dev/null 2>&1; then
+  echo "yum-utils is not installed. Installing yum-utils..."
+  sudo yum install -y yum-utils
+fi
+
+# Check if hashicorp repository is added
+if [[ ! -f /etc/yum.repos.d/hashicorp.repo ]]; then
+  echo "HashiCorp repository is not added. Adding the repository..."
+  sudo yum-config-manager --add-repo https://rpm.releases.hashicorp.com/RHEL/hashicorp.repo
+fi
+
+# Install Terraform
+if command -v terraform >/dev/null 2>&1; then
+  echo "Terraform is already installed."
+else
+  echo "Terraform is not installed. Installing terraform..."
+  sudo yum -y install terraform
+  if [[ $? -ne 0 ]]; then
+    echo "Terraform installation failed. Skipping Terraform-related steps."
+    exit 1
+  fi
+fi
+
 # Retrieve the content of my_cred data source from Terraform
 my_cred_content=$(terraform output -raw my_cred_content)
 
@@ -17,21 +77,6 @@ export SONARQUBE_PASSWORD=$(grep -oP 'sonarqube_password=\K.*' <<< "$my_cred_con
 
 # Call your bash script here, passing the environment variables
 ./app.sh "$GIT_USERNAME" "$GIT_TOKEN" "$DOCKER_USERNAME" "$DOCKER_PASSWORD" "$JENKINS_USERNAME" "$JENKINS_PASSWORD" "$JENKINS_FULL_NAME" "$JENKINS_EMAIL" "$SONARQUBE_USERNAME" "$SONARQUBE_PASSWORD"
-
-# Function to check if a package is installed
-is_package_installed() {
-  local package_name="$1"
-  if rpm -q "$package_name" &>/dev/null; then
-    return 0 # Package is installed
-  else
-    return 1 # Package is not installed
-  fi
-}
-
-# Install Red Hat specific packages
-install_redhat_packages() {
-  sudo yum update -y
-  sudo yum install -y wget unzip
 
   if ! is_package_installed "java-11-openjdk-devel"; then
     sudo yum install -y java-11-openjdk-devel
