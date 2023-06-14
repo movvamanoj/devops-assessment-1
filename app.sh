@@ -112,6 +112,14 @@ fi
   fi
 
   docker version
+# Install expect the package
+	sudo yum install -y expect
+	# Verify if expect is installed
+	if rpm -q expect >/dev/null; then
+	echo "expect installed successfully."
+	else
+	echo "Failed to install expect."
+	fi
 
   if ! is_package_installed "jenkins"; then
     sudo wget -O /etc/yum.repos.d/jenkins.repo https://pkg.jenkins.io/redhat-stable/jenkins.repo
@@ -135,10 +143,20 @@ fi
     echo "Jenkins version: $jenkins_version"
 
     jenkins_password=$(sudo cat /var/lib/jenkins/secrets/initialAdminPassword)
+   
+    # Use expect to automate login and provide the password
+  expect -c "
+    spawn java -jar \"$jenkins_cli_path\" -s http://localhost:8080 login
+    expect \"Password:\"
+    send \"$jenkins_password\r\"
+    interact
+  "
 
     sudo java -jar /var/cache/jenkins/war/WEB-INF/jenkins-cli.jar -s http://localhost:8080/ install-plugin --all
 
-    sudo java -jar /var/cache/jenkins/war/WEB-INF/jenkins-cli.jar -s http://localhost:8080/ -auth admin:${JENKINS_PASSWORD} create-user ${JENKINS_USERNAME} ${JENKINS_PASSWORD} --full-name ${JENKINS_FULL_NAME} --email ${JENKINS_EMAIL}
+sudo java -jar /var/cache/jenkins/war/WEB-INF/jenkins-cli.jar -s http://localhost:8080/ -auth admin:${jenkins_password} create-user "admin" "admin" --full-name "admin" --email "info@movva.com"
+
+#sudo java -jar /var/cache/jenkins/war/WEB-INF/jenkins-cli.jar -s http://localhost:8080/ -auth admin:${JENKINS_PASSWORD} create-user ${JENKINS_USERNAME} ${JENKINS_PASSWORD} --full-name ${JENKINS_FULL_NAME} --email ${JENKINS_EMAIL}
 
     sudo java -jar /var/cache/jenkins/war/WEB-INF/jenkins-cli.jar -s http://localhost:8080/ restart
 
