@@ -1,6 +1,4 @@
 #!/bin/bash
-
-
 # Function to check if a package is installed
 is_package_installed() {
   local package_name="$1"
@@ -11,19 +9,29 @@ is_package_installed() {
   fi
 }
 
-# Install Red Hat-specific packages
+# Install Red Hat specific packages
 install_redhat_packages() {
   sudo yum update -y
   sudo yum install -y wget unzip
 
+  if ! is_package_installed "java-11-openjdk-devel"; then
+    sudo yum install -y java-11-openjdk-devel
+    echo "export JAVA_HOME=/usr/lib/jvm/java-11-openjdk" >> ~/.bashrc
+  fi
 
-# Check if Python is installed
-if ! command -v python >/dev/null 2>&1; then
-  echo "Python is not installed. Installing Python..."
-  sudo yum install -y python
-fi
+  if ! is_package_installed "java-1.8.0-openjdk-devel"; then
+    sudo yum install -y java-1.8.0-openjdk-devel
+    echo "export JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk" >> ~/.bashrc
+  fi
 
-# Check if pip is installed
+  if ! is_package_installed "java-17-openjdk-devel"; then
+    sudo yum install -y java-17-openjdk-devel
+    echo "export SONAR_JAVA_PATH=/usr/lib/jvm/java-17-openjdk" >> ~/.bashrc
+  fi
+
+  source ~/.bashrc
+  
+  # Check if pip is installed
 if ! command -v pip >/dev/null 2>&1; then
   echo "Pip is not installed. Installing pip..."
   sudo yum install -y python-pip
@@ -53,54 +61,13 @@ if ! command -v terraform >/dev/null 2>&1; then
   sudo yum -y install terraform
 fi
 
-# Retrieve the content of my_cred data source from Terraform
-my_cred_content=$(terraform output -raw my_cred_content)
-
-# Set the environment variables from the my_cred content
-export GIT_USERNAME=$(grep -oP 'git_username=\K.*' <<< "$my_cred_content")
-export GIT_TOKEN=$(grep -oP 'git_token=\K.*' <<< "$my_cred_content")
-export DOCKER_USERNAME=$(grep -oP 'docker_username=\K.*' <<< "$my_cred_content")
-export DOCKER_PASSWORD=$(grep -oP 'docker_password=\K.*' <<< "$my_cred_content")
-export JENKINS_USERNAME=$(grep -oP 'jenkins_username=\K.*' <<< "$my_cred_content")
-export JENKINS_PASSWORD=$(grep -oP 'jenkins_password=\K.*' <<< "$my_cred_content")
-export JENKINS_FULL_NAME=$(grep -oP 'full_name=\K.*' <<< "$my_cred_content")
-export JENKINS_EMAIL=$(grep -oP 'email=\K.*' <<< "$my_cred_content")
-export SONARQUBE_USERNAME=$(grep -oP 'sonarqube_username=\K.*' <<< "$my_cred_content")
-export SONARQUBE_PASSWORD=$(grep -oP 'sonarqube_password=\K.*' <<< "$my_cred_content")
-
-# Call your bash script here, passing the environment variables
-./app.sh "$GIT_USERNAME" "$GIT_TOKEN" "$DOCKER_USERNAME" "$DOCKER_PASSWORD" "$JENKINS_USERNAME" "$JENKINS_PASSWORD" "$JENKINS_FULL_NAME" "$JENKINS_EMAIL" "$SONARQUBE_USERNAME" "$SONARQUBE_PASSWORD"
-
-  if ! is_package_installed "java-11-openjdk-devel"; then
-    sudo yum install -y java-11-openjdk-devel
-    echo "export JAVA_HOME=/usr/lib/jvm/java-11-openjdk" >> ~/.bashrc
-  fi
-
-  if ! is_package_installed "java-1.8.0-openjdk-devel"; then
-    sudo yum install -y java-1.8.0-openjdk-devel
-    echo "export JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk" >> ~/.bashrc
-  fi
-
-  if ! is_package_installed "java-17-openjdk-devel"; then
-    sudo yum install -y java-17-openjdk-devel
-    echo "export SONAR_JAVA_PATH=/usr/lib/jvm/java-17-openjdk" >> ~/.bashrc
-  fi
-
-  source ~/.bashrc
-
   if ! is_package_installed "git"; then
     sudo yum install -y git
   fi
 
-
-# Get GitHub username and token from arguments
-github_username=$1
-github_token=$2
-
-# Clone the repository
 if [ ! -d "$HOME/github" ]; then
   mkdir "$HOME/github"
-  cd "$HOME/github" && git config --global credential.helper 'cache --timeout=3600' && git clone "https://${github_username}:${github_token}@github.com/movvamanoj/movvaweb.git"
+  cd "$HOME/github" && git config --global credential.helper 'cache --timeout=3600' && git clone "https://${GIT_USERNAME}:${GIT_TOKEN}@github.com/movvamanoj/movvaweb.git"
 fi
 
   if ! is_package_installed "maven"; then
@@ -143,63 +110,37 @@ fi
     sudo systemctl start docker
     sudo systemctl enable docker
   fi
+
   docker version
 
-# Install expect package
-sudo yum install -y expect
+  if ! is_package_installed "jenkins"; then
+    sudo wget -O /etc/yum.repos.d/jenkins.repo https://pkg.jenkins.io/redhat-stable/jenkins.repo
+    sudo rpm --import https://pkg.jenkins.io/redhat-stable/jenkins.io.key
+    sudo yum install -y jenkins
+    sudo chown -R jenkins:jenkins /var/lib/jenkins
+    sudo chmod -R 755 /var/lib/jenkins
+    sudo usermod -aG docker jenkins
+    sudo chown jenkins:jenkins /var/cache/jenkins/war/WEB-INF/jenkins-cli.jar
+    sudo chmod 755 /var/cache/jenkins/war/WEB-INF/jenkins-cli.jar
+    sudo systemctl daemon-reload
+    sudo systemctl start jenkins
+    sudo systemctl enable jenkins
 
-# Verify if expect is installed
-if rpm -q expect >/dev/null; then
-  echo "expect installed successfully."
-else
-  echo "Failed to install expect."
-fi
-
-if ! is_package_installed "jenkins"; then
-  jenkins_repo_url="https://pkg.jenkins.io/redhat/jenkins.repo"
-  sudo curl "$jenkins_repo_url" -o /etc/yum.repos.d/jenkins.repo
-  sudo rpm --import https://pkg.jenkins.io/redhat/jenkins.io-2023.key
-  sudo yum install -y jenkins
-  sudo systemctl start jenkins
-  sudo systemctl enable jenkins
-  jenkins_cli_url="http://localhost:8080/jnlpJars/jenkins-cli.jar"
-  jenkins_cli_path="jenkins_cli_path="/var/lib/jenkins/jenkins-cli.jar"
-  sudo curl -fsSL "$jenkins_cli_url" -o "$jenkins_cli_path"
-  sudo chown jenkins:jenkins "$jenkins_cli_path"
-  sudo chmod 755 "$jenkins_cli_path"
-echo "Waiting for Jenkins to start..."
-  while ! sudo systemctl is-active --quiet jenkins; do
-    sleep 5
-  done
-  sudo chown -R jenkins:jenkins /var/lib/jenkins
-  sudo chmod -R 755 /var/lib/jenkins
-  sudo usermod -aG docker jenkins
-  sudo systemctl daemon-reload
-  sudo systemctl restart jenkins
-
-  echo "Waiting for Jenkins to Re-Start..."
-  while ! sudo systemctl is-active --quiet jenkins; do
-    sleep 5
-  done
+    echo "Waiting for Jenkins to start..."
+    while ! sudo systemctl is-active --quiet jenkins; do
+      sleep 5
+    done
 
     jenkins_version=$(sudo systemctl status jenkins | grep -oP 'Jenkins Continuous Integration Server, version \K(\d+\.\d+\.\d+)')
     echo "Jenkins version: $jenkins_version"
 
     jenkins_password=$(sudo cat /var/lib/jenkins/secrets/initialAdminPassword)
 
-# Use expect to automate login and provide the password
-  expect -c "
-    spawn java -jar \"$jenkins_cli_path\" -s http://localhost:8080 login
-    expect \"Password:\"
-    send \"$jenkins_password\r\"
-    interact
-  "
+    sudo java -jar /var/cache/jenkins/war/WEB-INF/jenkins-cli.jar -s http://localhost:8080/ install-plugin --all
 
-    sudo java -jar "$jenkins_cli_path" -s http://localhost:8080/ install-plugin --all
+    sudo java -jar /var/cache/jenkins/war/WEB-INF/jenkins-cli.jar -s http://localhost:8080/ -auth admin:${JENKINS_PASSWORD} create-user ${JENKINS_USERNAME} ${JENKINS_PASSWORD} --full-name ${JENKINS_FULL_NAME} --email ${JENKINS_EMAIL}
 
-    sudo java -jar "$jenkins_cli_path" -s http://localhost:8080/ -auth admin:${JENKINS_PASSWORD} create-user ${JENKINS_USERNAME} ${JENKINS_PASSWORD} --full-name ${JENKINS_FULL_NAME} --email ${JENKINS_EMAIL}
-
-    sudo java -jar "$jenkins_cli_path" -s http://localhost:8080/ restart
+    sudo java -jar /var/cache/jenkins/war/WEB-INF/jenkins-cli.jar -s http://localhost:8080/ restart
 
     sleep 30
 
