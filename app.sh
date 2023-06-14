@@ -35,7 +35,6 @@ if ! python -c "import boto3" >/dev/null 2>&1; then
   sudo pip install boto3
 fi
 
-
 # Check if yum-utils is installed
 if ! command -v yum-utils >/dev/null 2>&1; then
   echo "yum-utils is not installed. Installing yum-utils..."
@@ -48,16 +47,10 @@ if [[ ! -f /etc/yum.repos.d/hashicorp.repo ]]; then
   sudo yum-config-manager --add-repo https://rpm.releases.hashicorp.com/RHEL/hashicorp.repo
 fi
 
-# Install Terraform
-if command -v terraform >/dev/null 2>&1; then
-  echo "Terraform is already installed."
-else
+# Check if terraform is installed
+if ! command -v terraform >/dev/null 2>&1; then
   echo "Terraform is not installed. Installing terraform..."
   sudo yum -y install terraform
-  if [[ $? -ne 0 ]]; then
-    echo "Terraform installation failed. Skipping Terraform-related steps."
-    exit 1
-  fi
 fi
 
 # Retrieve the content of my_cred data source from Terraform
