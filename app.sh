@@ -123,16 +123,22 @@ fi
 
   if ! is_package_installed "jenkins"; then
     sudo wget -O /etc/yum.repos.d/jenkins.repo https://pkg.jenkins.io/redhat-stable/jenkins.repo
-    sudo rpm --import https://pkg.jenkins.io/redhat-stable/jenkins.io.key
+    sudo rpm --import https://pkg.jenkins.io/redhat/jenkins.io-2023.key
     sudo yum install -y jenkins
+    sudo systemctl start jenkins
+    sudo systemctl enable jenkins
+
+  
+  jenkins_cli_url="http://localhost:8080/jnlpJars/jenkins-cli.jar"
+  jenkins_cli_path="jenkins_cli_path="/var/lib/jenkins/jenkins-cli.jar"
+  sudo curl -fsSL "$jenkins_cli_url" -o "$jenkins_cli_path"
+  sudo chown jenkins:jenkins "$jenkins_cli_path"
+  sudo chmod 755 "$jenkins_cli_path"
     sudo chown -R jenkins:jenkins /var/lib/jenkins
     sudo chmod -R 755 /var/lib/jenkins
     sudo usermod -aG docker jenkins
-    sudo chown jenkins:jenkins /var/cache/jenkins/war/WEB-INF/jenkins-cli.jar
-    sudo chmod 755 /var/cache/jenkins/war/WEB-INF/jenkins-cli.jar
     sudo systemctl daemon-reload
-    sudo systemctl start jenkins
-    sudo systemctl enable jenkins
+    sudo systemctl restart jenkins
 
     echo "Waiting for Jenkins to start..."
     while ! sudo systemctl is-active --quiet jenkins; do
