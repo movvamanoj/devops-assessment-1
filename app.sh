@@ -127,13 +127,8 @@ fi
     sudo yum install -y jenkins
     sudo systemctl start jenkins
     sudo systemctl enable jenkins
-
-  
-  jenkins_cli_url="http://localhost:8080/jnlpJars/jenkins-cli.jar"
-  jenkins_cli_path="jenkins_cli_path="/var/lib/jenkins/jenkins-cli.jar"
-  sudo curl -fsSL "$jenkins_cli_url" -o "$jenkins_cli_path"
-  sudo chown jenkins:jenkins "$jenkins_cli_path"
-  sudo chmod 755 "$jenkins_cli_path"
+    sudo chmod -R 755 /var/cache/jenkins
+    sudo chown -R jenkins:jenkins /var/cache/jenkins
     sudo chown -R jenkins:jenkins /var/lib/jenkins
     sudo chmod -R 755 /var/lib/jenkins
     sudo usermod -aG docker jenkins
@@ -157,8 +152,10 @@ fi
     send \"$jenkins_password\r\"
     interact
   "
+# Download jenkins-cli.jar
+#sudo wget -O /var/cache/jenkins/war/WEB-INF/jenkins-cli.jar http://localhost:8080/jnlpJars/jenkins-cli.jar
 
-    sudo java -jar /var/cache/jenkins/war/WEB-INF/jenkins-cli.jar -s http://localhost:8080/ install-plugin --all
+sudo java -jar /var/cache/jenkins/war/WEB-INF/jenkins-cli.jar -s http://localhost:8080/ install-plugin --all
 
 sudo java -jar /var/cache/jenkins/war/WEB-INF/jenkins-cli.jar -s http://localhost:8080/ -auth admin:${jenkins_password} create-user "admin" "admin" --full-name "admin" --email "info@movva.com"
 
