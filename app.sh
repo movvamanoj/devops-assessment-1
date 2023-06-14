@@ -131,6 +131,9 @@ fi
     sudo chown -R jenkins:jenkins /var/cache/jenkins
     sudo chown -R jenkins:jenkins /var/lib/jenkins
     sudo chmod -R 755 /var/lib/jenkins
+    # Download jenkins-cli.jar
+    sudo wget -O /var/cache/jenkins/war/WEB-INF/jenkins-cli.jar http://localhost:8080/jnlpJars/jenkins-cli.jar
+
     sudo usermod -aG docker jenkins
     sudo systemctl daemon-reload
     sudo systemctl restart jenkins
@@ -152,8 +155,6 @@ fi
     send \"$jenkins_password\r\"
     interact
   "
-# Download jenkins-cli.jar
-#sudo wget -O /var/cache/jenkins/war/WEB-INF/jenkins-cli.jar http://localhost:8080/jnlpJars/jenkins-cli.jar
 
 sudo java -jar /var/cache/jenkins/war/WEB-INF/jenkins-cli.jar -s http://localhost:8080/ install-plugin --all
 
