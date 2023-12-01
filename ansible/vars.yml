@@ -1,0 +1,15 @@
+# HashiCorp Vault settings
+vault_address: "http://localhost:8200"
+vault_token: "hvs.XAV9spCtdKHjYJVvmymCN1QP"
+vault_secret_path: "v1/secret/data"
+vault_key_username: "gitusername"
+vault_key_token: "gittoken"
+
+
+# Git repository settings
+git_repo_url: "https://github.com/movvamanoj/devops-assessment-1.git"
+
+# Paths on the target machine
+temp_dir: "C:\\temp"
+git_clone_path: "{{ temp_dir }}\\devops-assessment-1"
+powershell_script_path: "{{ git_clone_path }}\\ansible\\tomcat.ps1"

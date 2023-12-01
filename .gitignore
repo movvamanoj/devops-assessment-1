@@ -26,3 +26,4 @@ my-app/.mvn/wrapper/maven-wrapper.jar
 *.properties
 my-app/mvnw
 *.cmd
+*.vscode

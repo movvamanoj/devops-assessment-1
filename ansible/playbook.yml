@@ -1,22 +1,42 @@
 ---
-- name: Install Tomcat on Windows
-  hosts: your_windows_group  # Replace with the name of your inventory group containing AWS Windows servers
+- name: Run PowerShell script from private Git repository on remote Windows server
+  hosts: windows_servers
   gather_facts: false
   become: yes
 
+  vars_files:
+    - vars.yml
+
   tasks:
-    - name: Clone Git repository
+    - name: Retrieve GitHub credentials from HashiCorp Vault
+      community.hashivault.hashi_vault_read:
+        address: "{{ vault_address }}"
+        token: "{{ vault_token }}"
+        secret: "{{ vault_secret_path }}"
+        key: "{{ vault_key_username }}"
+      register: github_username
+
+    - name: Retrieve GitHub token from HashiCorp Vault
+      community.hashivault.hashi_vault_read:
+        address: "{{ vault_address }}"
+        token: "{{ vault_token }}"
+        secret: "{{ vault_secret_path }}"
+        key: "{{ vault_key_token }}"
+      register: github_token
+
+    - name: Clone Git repository with HTTPS and credentials
       git:
-        repo: https://github.com/movvamanoj/your-repo.git  # Replace with your Git repository URL
-        dest: C:\temp\  # Change the destination directory as needed
+        repo: "{{ git_repo_url }}"
+        dest: "{{ git_clone_path }}"
+        version: main
 
     - name: Copy PowerShell script to target machine
       win_copy:
-        src: C:\temp\install_tomcat.ps1  # Replace with the path to your PowerShell script in the repository
-        dest: C:\install_tomcat.ps1
+        src: "{{ powershell_script_path }}"
+        dest: "{{ temp_dir }}\\tomcat.ps1"
 
     - name: Execute PowerShell script
       win_shell: |
         Set-ExecutionPolicy RemoteSigned -Scope Process -Force
-        C:\install_tomcat.ps1
+        "{{ temp_dir }}\\tomcat.ps1"
       become_user: Administrator
